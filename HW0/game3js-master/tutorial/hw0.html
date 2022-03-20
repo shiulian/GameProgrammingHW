@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+	#info {
+		position: absolute;
+		top: 10px; width: 100%;
+		
+		padding: 5px;
+		text-align: center;
+		font-size: 20px;
+		color: #ffff00
+	} 
+	body {
+		overflow: hidden
+  }
+</style>
+</head>
+
+<body>
+	<div id='info'>Homework 0 <br>
+		<button id="toggle" style="width:20%">Toggle Turn</button>
+	</div>
+<script src="https://threejs.org/build/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+<script>
+
+var clock;
+var renderer, scene, camera;
+var cube;
+var radius = 16;
+var angle = 0;  // initialization IMPORTANT!
+var turn = false;
+// make angle & turn 'static'
+
+init();
+animate();
+maketrain();
+makeTrack();
+
+$("#toggle").click(function() {
+  turn = !turn;
+  // change button name
+  if (turn)  // ... is turning 
+    $("#toggle").text ('stop');
+  else
+	$("#toggle").text ('turn');
+});
+
+function init () {
+	
+	clock = new THREE.Clock();
+	renderer = new THREE.WebGLRenderer();
+	document.body.appendChild (renderer.domElement);
+	var width = window.innerWidth;
+	var height = window.innerHeight;
+	renderer.setSize (width, height);
+	
+	renderer.setClearColor (0x888888);
+	
+	scene = new THREE.Scene();
+	var grid = new THREE.GridHelper(40,40, 0xaaaa00, 0x333333);
+	scene.add (grid);
+	var axes = new THREE.AxesHelper (5);
+	scene.add (axes);
+	
+	camera = new THREE.PerspectiveCamera (35, width/height, 1, 100);
+	camera.position.y = 16;
+	camera.position.z = 40;
+	camera.lookAt (new THREE.Vector3(0,0,0));
+	
+	let controls = new THREE.OrbitControls(camera, renderer.domElement);
+	
+	window.addEventListener('resize', onWindowResize, false);
+	///////////////////////////////////////////////////////////////
+	train = maketrain();
+	scene.add (train);
+	
+	scene.add (makeTrack());
+}
+
+function maketrain(){
+	var train = new THREE.Group();
+
+	var cubeGeometry = new THREE.BoxGeometry (2,1.5,4);
+	var cubeMaterial = new THREE.MeshNormalMaterial();
+	cube = new THREE.Mesh (cubeGeometry, cubeMaterial);
+
+	head = new THREE.Mesh (new THREE.CylinderGeometry(0.5,0.5,2,10), new THREE.MeshNormalMaterial());
+	head.position.y = 0.3;
+	head.position.z = -1;
+
+	front_wheel = new THREE.Mesh (new THREE.CylinderGeometry(0.5,0.5,2.7,50), new THREE.MeshNormalMaterial());
+	front_wheel.position.y = -0.25;
+	front_wheel.position.z = -1.2;
+	front_wheel.rotation.z = Math.PI/2;
+
+	wheel = new THREE.Mesh (new THREE.CylinderGeometry(0.5,0.5,2.7,50), new THREE.MeshNormalMaterial());
+	wheel.position.y = -0.25;
+	wheel.rotation.z = Math.PI/2;
+
+	rear_wheel = new THREE.Mesh (new THREE.CylinderGeometry(0.5,0.5,2.7,50), new THREE.MeshNormalMaterial());
+	rear_wheel.position.y = -0.25;
+	rear_wheel.position.z = 1.2;
+	rear_wheel.rotation.z = Math.PI/2;
+
+	train.add(cube, head, front_wheel, wheel, rear_wheel);
+	return train;
+}
+
+function makeTrack(){
+	var points = [];
+	var theta = 0;
+	for (var i = 0 ; i < 100 ; i++){
+		theta = i*Math.PI*2/100;
+		var point = new THREE.Vector3(radius*Math.cos(theta), 0, radius*Math.sin(theta));
+		points.push(point);
+	}
+	var geom = new THREE.BufferGeometry ().setFromPoints (points);
+	var line = new THREE.Line (geom, new THREE.LineBasicMaterial({color:0xff0000}));
+	return line;
+}
+
+function onWindowResize() {
+  
+	var width = window.innerWidth;
+  var height = window.innerHeight;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+	
+}
+
+function animate() {
+	var dt = clock.getDelta();
+
+	if (turn) angle += Math.PI/15 * dt;
+	train.position.set (radius*Math.cos(angle), 0.75, -radius*Math.sin(angle));
+	train.rotation.y = angle;
+	requestAnimationFrame(animate);
+	render();
+	
+}
+
+function render() {
+	
+	renderer.render(scene, camera);
+	
+}
+
+</script>
+</body>
+
+</html>
